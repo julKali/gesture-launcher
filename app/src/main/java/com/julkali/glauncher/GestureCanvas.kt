@@ -19,9 +19,9 @@ class GestureCanvas(private val gesture: Gesture) : Drawable() {
     override fun draw(canvas: Canvas) {
         val width = bounds.width()
         val height = bounds.height()
+        canvas.zoomCenter(0.9F)
         gesture.pointers.forEach { (_, coords) ->
             val points = coords.flatMap { it.toFloatXYArray(width, height) }.toFloatArray()
-            canvas.zoomCenter(0.9F)
             canvas.drawPoints(points, redPaint)
         }
     }
