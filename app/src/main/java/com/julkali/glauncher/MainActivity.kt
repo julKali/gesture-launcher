@@ -23,7 +23,7 @@ class MainActivity : FragmentActivity(),
 
     private val TAG = "Main"
     private val COMPRESSED_SIZE = 100
-    private val MIN_SCORE_THRESHOLD = 0.6
+    private val MIN_SCORE_THRESHOLD = 0.8
 
     private val gestureScoreCalculator =
         GestureScoreCalculator()
