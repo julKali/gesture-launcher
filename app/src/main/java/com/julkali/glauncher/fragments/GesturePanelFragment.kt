@@ -24,22 +24,11 @@ class GesturePanelFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_gesture_panel, container, false)
-        /*gestureBuilder = GestureBuilder(object : AsyncTask<Gesture, Unit, Gesture>() {
-
-            // todo: solve this more elegantly
-            override fun doInBackground(vararg params: Gesture): Gesture {
-                return params.first()
-            }
-
-            override fun onPostExecute(result: Gesture) {
-                listener?.onGestureDrawn(result)
-            }
-        })*/
         val subject = PublishSubject.create<MotionEvent>()
         gestureBuilder = GestureBuilder()
         gestureBuilder.getGesturesObserver()
             .observeOn(AndroidSchedulers.mainThread())
-            .forEach {
+            .doOnNext {
                 listener?.onGestureDrawn(it)
             }
         gestureBuilder.processMotionEvents(subject.toFlowable(BackpressureStrategy.ERROR))
