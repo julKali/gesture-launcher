@@ -40,7 +40,14 @@ class SaveGestureActivity : FragmentActivity(),
     private fun loadPackageNames() {
         val packageNamesSpinner = findViewById<Spinner>(R.id.packageNames)
         val packages = appFinder.find()
-        val appInfos = packages
+        val savedGestures = dbHandler.readSavedGestures()
+            .map {
+                Pair(it.packageName, it.intentAction)
+            }
+        val unregistered = packages.filter {
+            !savedGestures.contains(Pair(it.packageName, it.intentAction))
+        }
+        val appInfos = unregistered
             .sortedBy {
                 it.name
             }
@@ -57,7 +64,12 @@ class SaveGestureActivity : FragmentActivity(),
             Toast.makeText(applicationContext, "You have to first choose an app and click on Register!", Toast.LENGTH_SHORT).show()
             return
         }
-        // todo: check that gesture doesn't exist already
+        val alreadyRegistered =
+            dbHandler.isAppAlreadyRegistered(selected.packageName, selected.intentAction)
+        if (alreadyRegistered) {
+            Toast.makeText(applicationContext, "This app is already registered!", Toast.LENGTH_SHORT).show()
+            return
+        }
         val entry =
             dbHandler.saveAppLaunchEntry(selected.appName, selected.packageName, selected.intentAction, gesture)
         onGestureSaved(entry)
@@ -74,7 +86,7 @@ class SaveGestureActivity : FragmentActivity(),
 
     override fun onGestureDrawn(gesture: Gesture) {
         val normalizer = GestureNormalizer()
-        val normalized = normalizer.normalize(gesture)
+        val normalized = normalizer.normalize(gesture) // todo investigate dots always get consolidated
         saveGesture(normalized)
     }
 }

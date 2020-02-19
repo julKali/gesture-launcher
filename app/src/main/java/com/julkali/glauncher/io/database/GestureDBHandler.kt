@@ -27,7 +27,12 @@ class GestureDBHandler(context: Context) {
         }
     }
 
-    fun saveAppLaunchEntry(appName: String, packageName: String, intentAction: String, gesture: Gesture): AppLaunchEntry {
+    fun saveAppLaunchEntry(
+        appName: String,
+        packageName: String,
+        intentAction: String,
+        gesture: Gesture
+    ): AppLaunchEntry {
         val doc = MutableDocument()
             .setString("appName", appName)
             .setString("packageName", packageName)
@@ -66,5 +71,19 @@ class GestureDBHandler(context: Context) {
         val doc = db.getDocument(id) ?: return false
         db.delete(doc)
         return true
+    }
+
+    fun isAppAlreadyRegistered(packageName: String, intentAction: String): Boolean {
+        val results = QueryBuilder
+            .select(SelectResult.expression(Meta.id))
+            .from(DataSource.database(db))
+            .where(
+                Expression.property("packageName").equalTo(Expression.string(packageName))
+                    .and(
+                        Expression.property("intentAction").equalTo(Expression.string(intentAction))
+                    )
+            )
+            .execute()
+        return results.next() != null
     }
 }
