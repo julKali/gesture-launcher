@@ -27,6 +27,7 @@ class GestureScoreCalculator {
         val otherCoords = toCompare.coords
         val size = subjCoords.size
         if (size != otherCoords.size) {
+            if (subject.isPoint() || toCompare.isPoint()) return -1.0
             Log.e(TAG, "subjCoords.size = ${subjCoords.size}, otherCoords.size = ${otherCoords.size}")
             throw Exception("Coords are not of same length")
         }
@@ -38,5 +39,9 @@ class GestureScoreCalculator {
             .sum()
         val averageDifference = total / size
         return 1.0 - averageDifference
+    }
+
+    private fun Pointer.isPoint(): Boolean {
+        return coords.size == 1
     }
 }

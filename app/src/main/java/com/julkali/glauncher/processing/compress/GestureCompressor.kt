@@ -12,6 +12,8 @@ class GestureCompressor(private val compressedSize: Int) {
     fun compress(gesture: Gesture): Gesture {
         val pointers = gesture.pointers
             .map {
+                val isPoint = it.coords.size == 1
+                if (isPoint) return@map it
                 val vectors = it.toPositionedVectors()
                 val totalLength = vectors.map { it.vector.length }.sum()
                 val pieceLength = totalLength / compressedSize

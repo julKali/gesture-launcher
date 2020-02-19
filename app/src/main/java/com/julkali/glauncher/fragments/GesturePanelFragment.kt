@@ -4,30 +4,47 @@ import android.content.Context
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import com.julkali.glauncher.processing.data.Gesture
 import com.julkali.glauncher.processing.GestureBuilder
 import com.julkali.glauncher.R
+import io.reactivex.BackpressureStrategy
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.subjects.PublishSubject
 
 class GesturePanelFragment : Fragment() {
     private val TAG = "GesturePanelFragment"
     private var listener: GesturePanelFragmentListener? = null
-    private val gestureBuilder =
-        GestureBuilder()
+    private lateinit var gestureBuilder: GestureBuilder
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_gesture_panel, container, false)
-        view.setOnTouchListener { v, ev ->
-            gestureBuilder.processMotionEvent(ev)
-            if (gestureBuilder.getIsDone()) {
-                listener?.onGestureDrawn(gestureBuilder.getGesture())
-                gestureBuilder.clear()
+        /*gestureBuilder = GestureBuilder(object : AsyncTask<Gesture, Unit, Gesture>() {
+
+            // todo: solve this more elegantly
+            override fun doInBackground(vararg params: Gesture): Gesture {
+                return params.first()
             }
+
+            override fun onPostExecute(result: Gesture) {
+                listener?.onGestureDrawn(result)
+            }
+        })*/
+        val subject = PublishSubject.create<MotionEvent>()
+        gestureBuilder = GestureBuilder()
+        gestureBuilder.getGesturesObserver()
+            .observeOn(AndroidSchedulers.mainThread())
+            .forEach {
+                listener?.onGestureDrawn(it)
+            }
+        gestureBuilder.processMotionEvents(subject.toFlowable(BackpressureStrategy.ERROR))
+        view.setOnTouchListener { v, ev ->
+            subject.onNext(ev)
             true
         }
         return view
@@ -38,7 +55,7 @@ class GesturePanelFragment : Fragment() {
         if (context is GesturePanelFragmentListener) {
             listener = context
         } else {
-            throw RuntimeException(context.toString() + " must implement GesturePanelFragmentListener")
+            throw RuntimeException("$context must implement GesturePanelFragmentListener")
         }
     }
 

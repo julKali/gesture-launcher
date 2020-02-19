@@ -8,24 +8,12 @@ import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
 import com.julkali.glauncher.fragments.GesturePanelFragment
-import com.julkali.glauncher.io.database.GestureDBHandler
 import com.julkali.glauncher.io.database.AppLaunchEntry
-import com.julkali.glauncher.io.file.FileWriter
+import com.julkali.glauncher.io.database.GestureDBHandler
+import com.julkali.glauncher.processing.GestureNormalizer
 import com.julkali.glauncher.processing.compress.GestureCompressor
 import com.julkali.glauncher.processing.data.Gesture
-import com.julkali.glauncher.processing.GestureNormalizer
 import com.julkali.glauncher.processing.score.GestureScoreCalculator
-
-class AppInformationListEntry(
-    val appName: String,
-    val packageName: String,
-    val intentAction: String
-) {
-
-    override fun toString(): String {
-        return appName
-    }
-}
 
 class MainActivity : FragmentActivity(),
     GesturePanelFragment.GesturePanelFragmentListener {

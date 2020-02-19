@@ -4,57 +4,84 @@ import android.util.Log
 import android.view.MotionEvent
 import com.julkali.glauncher.processing.data.Coordinate
 import com.julkali.glauncher.processing.data.Gesture
+import io.reactivex.BackpressureStrategy
+import io.reactivex.Flowable
+import io.reactivex.subjects.PublishSubject
+import java.util.*
 
-class GestureBuilder {
+class GestureBuilder() {
 
     private val TAG = "GestureBuilder"
-    private val currentGesture = mutableMapOf<Int, MutableList<Coordinate>>()
-    private var isDone = false
+    private val WAIT_FOR_NEXT_DOWN_MILLISECONDS: Long = 500
 
-    fun processMotionEvent(ev: MotionEvent) {
-        if (isDone) {
-            throw Exception("Gesture already built!")
-        }
-        val pointerCount = ev.pointerCount
-        when (ev.action) {
-            MotionEvent.ACTION_DOWN -> {
-                //Log.d(TAG, "NEW POINTER")
-                for (p in 0 until pointerCount) {
-                    val pId = ev.getPointerId(p)
-                    addToGesture(pId, ev.getX(p).toDouble(), ev.getY(p).toDouble())
-                }
-            }
-            MotionEvent.ACTION_UP -> {
-                //Log.d(TAG, "POINTER RELEASED")
-                for (p in 0 until pointerCount) {
-                    val pId = ev.getPointerId(p)
-                    addToGesture(pId, ev.getX(p).toDouble(), ev.getY(p).toDouble())
-                }
-                isDone = true
-            }
-            MotionEvent.ACTION_MOVE -> {
-                //Log.d(TAG, "POINTER MOVED")
-                val historySize = ev.historySize;
-                for (h in 0 until historySize) {
-                    for (p in 0 until pointerCount) {
-                        val pId = ev.getPointerId(p)
-                        addToGesture(
-                            pId,
-                            ev.getHistoricalX(p, h).toDouble(),
-                            ev.getHistoricalY(p, h).toDouble()
-                        )
+    private val currentGesture = mutableMapOf<Int, MutableList<Coordinate>>()
+    private val internalToExternalPointerIds = mutableMapOf<Int, Int>()
+    private val timer = Timer()
+    private var timerTask: TimerTask? = null
+    private val gesturesBuilt = PublishSubject.create<Gesture>()
+
+    fun processMotionEvents(motionEvents: Flowable<MotionEvent>) {
+        motionEvents
+            .forEach { ev ->
+                val pointerCount = ev.pointerCount
+                when (ev.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        timerTask?.cancel()
+                        for (p in 0 until pointerCount) {
+                            val pId = ev.getPointerId(p)
+                            val externalId = getNextPointerId()
+                            internalToExternalPointerIds[pId] = externalId
+                            addToGesture(externalId, ev.getX(p).toDouble(), ev.getY(p).toDouble())
+                        }
+                    }
+                    MotionEvent.ACTION_UP -> {
+                        for (p in 0 until pointerCount) {
+                            val pId = ev.getPointerId(p)
+                            val externalId = internalToExternalPointerIds[pId]
+                                ?: throw Exception("Pointer ID $pId not found")
+                            addToGesture(externalId, ev.getX(p).toDouble(), ev.getY(p).toDouble())
+                            internalToExternalPointerIds.remove(pId)
+                        }
+                        timerTask = object : TimerTask() {
+                            override fun run() {
+                                val gesture = Gesture.fromPointerMap(currentGesture)
+                                gesturesBuilt.onNext(gesture)
+                                clear()
+                            }
+                        }
+                        timer.schedule(timerTask, WAIT_FOR_NEXT_DOWN_MILLISECONDS)
+                    }
+                    MotionEvent.ACTION_MOVE -> {
+                        val historySize = ev.historySize;
+                        for (h in 0 until historySize) {
+                            for (p in 0 until pointerCount) {
+                                val pId = ev.getPointerId(p)
+                                val externalId = internalToExternalPointerIds[pId]
+                                    ?: throw Exception("Pointer ID $pId not found")
+                                addToGesture(
+                                    externalId,
+                                    ev.getHistoricalX(p, h).toDouble(),
+                                    ev.getHistoricalY(p, h).toDouble()
+                                )
+                            }
+                        }
+                        for (p in 0 until pointerCount) {
+                            val pId = ev.getPointerId(p)
+                            val externalId = internalToExternalPointerIds[pId]
+                                ?: throw Exception("Pointer ID $pId not found")
+                            addToGesture(externalId, ev.getX(p).toDouble(), ev.getY(p).toDouble())
+                        }
+                    }
+                    MotionEvent.ACTION_CANCEL -> {
+                        Log.d(TAG, "GESTURE CANCELLED")
+                        clear()
                     }
                 }
-                for (p in 0 until pointerCount) {
-                    val pId = ev.getPointerId(p)
-                    addToGesture(pId, ev.getX(p).toDouble(), ev.getY(p).toDouble())
-                }
             }
-            MotionEvent.ACTION_CANCEL -> {
-                Log.d(TAG, "GESTURE CANCELLED")
-                currentGesture.clear()
-            }
-        }
+    }
+
+    private fun getNextPointerId(): Int {
+        return currentGesture.size
     }
 
     private fun addToGesture(pointerId: Int, xCoord: Double, yCoord: Double) {
@@ -66,16 +93,14 @@ class GestureBuilder {
         pointerCoords.add(coord)
     }
 
-    fun getIsDone(): Boolean {
-        return isDone
-    }
-
-    fun clear() {
+    private fun clear() {
+        timerTask?.cancel()
+        timerTask = null
         currentGesture.clear()
-        isDone = false
+        internalToExternalPointerIds.clear()
     }
 
-    fun getGesture(): Gesture {
-        return Gesture.fromPointerMap(currentGesture)
+    public fun getGesturesObserver(): Flowable<Gesture> {
+        return gesturesBuilt.toFlowable(BackpressureStrategy.ERROR)
     }
 }

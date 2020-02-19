@@ -3,8 +3,6 @@ package com.julkali.glauncher
 import android.content.Context
 import android.content.Intent
 
-data class LaunchableApp(val name: String, val packageName: String, val intentAction: String)
-
 class LaunchableAppFinder(context: Context) {
 
     private val packageManager = context.packageManager
