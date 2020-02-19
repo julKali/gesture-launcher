@@ -4,6 +4,7 @@ import com.julkali.glauncher.processing.data.Gesture
 
 data class AppLaunchEntry(
     val id: String,
+    val appName: String,
     val packageName: String,
     val intentAction: String,
     val gesture: Gesture

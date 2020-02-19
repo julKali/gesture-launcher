@@ -59,7 +59,7 @@ class SaveGestureActivity : FragmentActivity(),
         }
         // todo: check that gesture doesn't exist already
         val entry =
-            dbHandler.saveAppLaunchEntry(selected.packageName, selected.intentAction, gesture)
+            dbHandler.saveAppLaunchEntry(selected.appName, selected.packageName, selected.intentAction, gesture)
         onGestureSaved(entry)
     }
 

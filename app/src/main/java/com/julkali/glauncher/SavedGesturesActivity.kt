@@ -12,6 +12,8 @@ class SavedGesturesActivity : FragmentActivity() {
 
     private lateinit var dbHandler: GestureDBHandler
 
+    private var displayedId: String? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_saved_gestures)
@@ -21,15 +23,20 @@ class SavedGesturesActivity : FragmentActivity() {
 
     private fun loadSavedApps() {
         val savedAppEntries = dbHandler.readSavedGestures()
+        if (savedAppEntries.isEmpty()) {
+            displayNoGesturesMessage()
+            return
+        }
         val appEntriesSpinner = findViewById<Spinner>(R.id.savedAppEntries)
         val entries = savedAppEntries
             .map {
                 object {
-                    val packageName = it.packageName
+                    val id = it.id
+                    val appName = it.appName
                     val gesture = it.gesture
 
                     override fun toString(): String {
-                        return packageName
+                        return appName
                     }
                 }
             }
@@ -48,13 +55,31 @@ class SavedGesturesActivity : FragmentActivity() {
                 val selected = entries[position]
                 val fragment: GestureViewerFragment =
                     this@SavedGesturesActivity.gestureViewerFragment as GestureViewerFragment
-                fragment.view(
-                    selected.packageName,
+                fragment.display(
+                    selected.appName,
                     selected.gesture
                     )
+                displayedId = selected.id
             }
 
         }
         appEntriesSpinner.adapter = adapter
+    }
+
+    private fun displayNoGesturesMessage() {
+        val appEntriesSpinner = findViewById<Spinner>(R.id.savedAppEntries)
+        val deleteButton = findViewById<Button>(R.id.deleteLaunchEntryButton)
+        appEntriesSpinner.visibility = View.GONE
+        deleteButton.visibility = View.GONE
+        val fragmentManager = supportFragmentManager
+        fragmentManager.beginTransaction().hide(gestureViewerFragment).commit()
+        val txtNoGestures = findViewById<TextView>(R.id.txtNoGestures)
+        txtNoGestures?.visibility = View.VISIBLE
+    }
+
+    fun deleteAppLaunchEntry(view: View) {
+        val lock = displayedId ?: return
+        dbHandler.deleteAppLaunchEntryById(lock)
+        loadSavedApps()
     }
 }

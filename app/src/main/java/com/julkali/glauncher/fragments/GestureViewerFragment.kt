@@ -21,7 +21,7 @@ class GestureViewerFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_gesture_viewer, container, false)
     }
 
-    fun view(appName: String, gesture: Gesture) {
+    fun display(appName: String, gesture: Gesture) {
         view?.findViewById<TextView>(R.id.txtAppName)?.text = appName
         drawGesture(gesture)
     }

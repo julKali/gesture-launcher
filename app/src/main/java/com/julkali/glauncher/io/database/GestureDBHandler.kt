@@ -11,7 +11,6 @@ class GestureDBHandler(context: Context) {
     val dbConfig = DatabaseConfiguration(context)
     val db = Database("gestures", dbConfig)
 
-
     fun readSavedGestures(): List<AppLaunchEntry> {
         val query = QueryBuilder
             .select(SelectResult.all())
@@ -20,22 +19,24 @@ class GestureDBHandler(context: Context) {
         return results.map {
             val gestureDoc = it.getDictionary("gestures")
             val id = gestureDoc.getString("id")
+            val appName = gestureDoc.getString("appName")
             val packageName = gestureDoc.getString("packageName")
             val intentAction = gestureDoc.getString("intentAction")
             val gesture = Gesture.fromDictionary(gestureDoc.getDictionary("gesture"))
-            AppLaunchEntry(id, packageName, intentAction, gesture)
+            AppLaunchEntry(id, appName, packageName, intentAction, gesture)
         }
     }
 
-    fun saveAppLaunchEntry(packageName: String, intentAction: String, gesture: Gesture): AppLaunchEntry {
+    fun saveAppLaunchEntry(appName: String, packageName: String, intentAction: String, gesture: Gesture): AppLaunchEntry {
         val doc = MutableDocument()
+            .setString("appName", appName)
             .setString("packageName", packageName)
             .setString("intentAction", intentAction)
             .setValue("gesture", convertToSafeType(gesture))
         doc.setString("id", doc.id)
         db.save(doc)
         val id = doc.id!!
-        return AppLaunchEntry(id, packageName, intentAction, gesture)
+        return AppLaunchEntry(id, appName, packageName, intentAction, gesture)
     }
 
     private fun convertToSafeType(gesture: Gesture): Map<String, List<Map<String, Double>>> {
@@ -59,5 +60,11 @@ class GestureDBHandler(context: Context) {
             Pointer(pointerId.toInt(), coords)
         }
         return Gesture(pointers)
+    }
+
+    fun deleteAppLaunchEntryById(id: String): Boolean {
+        val doc = db.getDocument(id) ?: return false
+        db.delete(doc)
+        return true
     }
 }
