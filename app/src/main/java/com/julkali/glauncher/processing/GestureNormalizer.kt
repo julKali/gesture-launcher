@@ -40,11 +40,21 @@ class GestureNormalizer {
             }
             .toMap()
         if (allPointersPoints) {
-            val pointers = gesture.pointers.map {
-                val coords = listOf(Coordinate(0.0, 0.0))
-                it.id to coords
-            }.toMap()
-            return Gesture.fromPointerMap(pointers)
+            val allCoords = gesture.pointers.flatMap {
+                it.coords
+            }
+            val totalMaxX = allCoords.maxBy { it.x }!!.x
+            val totalMaxY = allCoords.maxBy { it.y }!!.y
+            val totalWidthX = totalMaxX - totalMinX
+            val totalWidthY = totalMaxY - totalMinY
+            val maxTotalWidth = max(totalWidthX, totalWidthY)
+            if (maxTotalWidth <= IS_POINT_THRESHOLD) {
+                val pointers = gesture.pointers.map {
+                    val coords = listOf(Coordinate(0.0, 0.0))
+                    it.id to coords
+                }.toMap()
+                return Gesture.fromPointerMap(pointers)
+            }
         }
         var relativeMax = 0.0
         val relativeCoords = pointerCoordsPointsConsolidated

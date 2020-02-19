@@ -86,7 +86,7 @@ class SaveGestureActivity : FragmentActivity(),
 
     override fun onGestureDrawn(gesture: Gesture) {
         val normalizer = GestureNormalizer()
-        val normalized = normalizer.normalize(gesture) // todo investigate dots always get consolidated
+        val normalized = normalizer.normalize(gesture)
         saveGesture(normalized)
     }
 }
