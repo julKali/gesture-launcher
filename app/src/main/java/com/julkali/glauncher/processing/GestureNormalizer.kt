@@ -7,7 +7,7 @@ import kotlin.math.min
 
 class GestureNormalizer {
 
-    private val IS_POINT_THRESHOLD = 10
+    private val IS_POINT_THRESHOLD = 75
 
     fun normalize(gesture: Gesture): Gesture {
         var totalMinX = Double.POSITIVE_INFINITY
