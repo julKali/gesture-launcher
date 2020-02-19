@@ -28,7 +28,7 @@ class GesturePanelFragment : Fragment() {
         gestureBuilder = GestureBuilder()
         gestureBuilder.getGesturesObserver()
             .observeOn(AndroidSchedulers.mainThread())
-            .doOnNext {
+            .forEach {
                 listener?.onGestureDrawn(it)
             }
         gestureBuilder.processMotionEvents(subject.toFlowable(BackpressureStrategy.ERROR))

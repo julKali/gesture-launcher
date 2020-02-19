@@ -1,5 +1,5 @@
 package com.julkali.glauncher.processing.data
 
-import com.julkali.glauncher.processing.data.Coordinate
+import java.io.Serializable
 
-data class Pointer(val id: Int, val coords: List<Coordinate>)
+data class Pointer(val id: Int, val coords: List<Coordinate>) : Serializable

@@ -2,6 +2,7 @@ package com.julkali.glauncher
 
 import android.content.ComponentName
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -12,7 +13,9 @@ import com.julkali.glauncher.io.database.AppLaunchEntry
 import com.julkali.glauncher.io.database.GestureDBHandler
 import com.julkali.glauncher.processing.GestureNormalizer
 import com.julkali.glauncher.processing.compress.GestureCompressor
+import com.julkali.glauncher.processing.data.Coordinate
 import com.julkali.glauncher.processing.data.Gesture
+import com.julkali.glauncher.processing.data.Pointer
 import com.julkali.glauncher.processing.score.GestureScoreCalculator
 
 class MainActivity : FragmentActivity(),
@@ -39,6 +42,11 @@ class MainActivity : FragmentActivity(),
 
     fun onNewButtonClicked(view: View) {
         val intent = Intent(this, SaveGestureActivity::class.java)
+        startActivity(intent)
+    }
+
+    fun onViewButtonClicked(view: View) {
+        val intent = Intent(this, SavedGesturesActivity::class.java)
         startActivity(intent)
     }
 

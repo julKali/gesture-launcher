@@ -1,5 +1,6 @@
 package com.julkali.glauncher.processing
 
+import android.annotation.SuppressLint
 import android.util.Log
 import android.view.MotionEvent
 import com.julkali.glauncher.processing.data.Coordinate
@@ -9,7 +10,7 @@ import io.reactivex.Flowable
 import io.reactivex.subjects.PublishSubject
 import java.util.*
 
-class GestureBuilder() {
+class GestureBuilder {
 
     private val TAG = "GestureBuilder"
     private val WAIT_FOR_NEXT_DOWN_MILLISECONDS: Long = 500
@@ -20,10 +21,12 @@ class GestureBuilder() {
     private var timerTask: TimerTask? = null
     private val gesturesBuilt = PublishSubject.create<Gesture>()
 
+    @SuppressLint("CheckResult")
     fun processMotionEvents(motionEvents: Flowable<MotionEvent>) {
         motionEvents
             .forEach { ev ->
                 val pointerCount = ev.pointerCount
+                // todo: use ev.getActionMasked(), see https://developer.android.com/training/gestures/multi
                 when (ev.action) {
                     MotionEvent.ACTION_DOWN -> {
                         timerTask?.cancel()

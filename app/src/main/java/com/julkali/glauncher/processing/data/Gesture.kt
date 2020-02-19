@@ -1,6 +1,8 @@
 package com.julkali.glauncher.processing.data
 
-data class Gesture(val pointers: List<Pointer>) {
+import java.io.Serializable
+
+data class Gesture(val pointers: List<Pointer>) : Serializable {
 
     fun toPointerMap(): Map<Int, List<Coordinate>> {
         return pointers.map {

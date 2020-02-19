@@ -4,16 +4,23 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#85333333"
-    tools:context=".fragments.GesturePanelFragment">
+    tools:context=".SavedGesturesActivity">
 
-    <TextView
-        android:id="@+id/textView4"
-        android:layout_width="wrap_content"
+    <Spinner
+        android:id="@+id/savedAppEntries"
+        android:layout_width="409dp"
         android:layout_height="wrap_content"
-        android:text="Draw a new gesture!"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <fragment
+        android:id="@+id/gestureViewerFragment"
+        android:name="com.julkali.glauncher.fragments.GestureViewerFragment"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/savedAppEntries" />
 </androidx.constraintlayout.widget.ConstraintLayout>
