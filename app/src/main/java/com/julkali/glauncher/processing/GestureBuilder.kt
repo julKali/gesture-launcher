@@ -13,7 +13,7 @@ import java.util.*
 class GestureBuilder {
 
     private val TAG = "GestureBuilder"
-    private val WAIT_FOR_NEXT_DOWN_MILLISECONDS: Long = 500
+    private val WAIT_FOR_NEXT_DOWN_MILLISECONDS: Long = 250
 
     private val currentGesture = mutableMapOf<Int, MutableList<Coordinate>>()
     private val internalToExternalPointerIds = mutableMapOf<Int, Int>()
