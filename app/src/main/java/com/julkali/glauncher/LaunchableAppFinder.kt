@@ -11,10 +11,9 @@ class LaunchableAppFinder(context: Context) {
         val launchableIntent = createLaunchableIntent()
         val launchables = packageManager.queryIntentActivities(launchableIntent, 0)
         return launchables.map {
-            val appInfo = it.activityInfo.applicationInfo
-            val appName = packageManager.getApplicationLabel(appInfo)?.toString()
-                ?: throw Exception("app name not found!")
-            LaunchableApp(appName, it.activityInfo.packageName, it.activityInfo.name)
+            val activityInfo = it.activityInfo
+            val appName = activityInfo.loadLabel(packageManager).toString()
+            LaunchableApp(appName, activityInfo.packageName, activityInfo.name)
         }
     }
 

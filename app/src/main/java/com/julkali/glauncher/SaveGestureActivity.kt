@@ -1,22 +1,19 @@
 package com.julkali.glauncher
 
-import android.content.ComponentName
-import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Spinner
 import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
-import com.julkali.glauncher.fragments.GesturePanelFragment
+import com.julkali.glauncher.fragments.GestureDrawerFragment
 import com.julkali.glauncher.io.database.AppLaunchEntry
 import com.julkali.glauncher.io.database.GestureDBHandler
 import com.julkali.glauncher.processing.GestureNormalizer
 import com.julkali.glauncher.processing.data.Gesture
 
 class SaveGestureActivity : FragmentActivity(),
-    GesturePanelFragment.GesturePanelFragmentListener{
+    GestureDrawerFragment.GesturePanelFragmentListener{
 
     private val TAG = "SaveGestureActivity"
     private lateinit var dbHandler: GestureDBHandler

@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#F0F0F0"
     android:orientation="vertical"
     android:weightSum="2"
     tools:context=".SaveGestureActivity">
@@ -32,7 +33,7 @@
 
     <fragment
         android:id="@+id/fragment"
-        android:name="com.julkali.glauncher.fragments.GesturePanelFragment"
+        android:name="com.julkali.glauncher.fragments.GestureDrawerFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1" />

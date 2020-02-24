@@ -14,7 +14,7 @@ import io.reactivex.BackpressureStrategy
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.subjects.PublishSubject
 
-class GesturePanelFragment : Fragment() {
+class GestureDrawerFragment : Fragment() {
     private val TAG = "GesturePanelFragment"
     private var listener: GesturePanelFragmentListener? = null
     private lateinit var gestureBuilder: GestureBuilder
@@ -23,7 +23,7 @@ class GesturePanelFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.fragment_gesture_panel, container, false)
+        val view = inflater.inflate(R.layout.fragment_gesture_drawer, container, false)
         val subject = PublishSubject.create<MotionEvent>()
         gestureBuilder = GestureBuilder()
         gestureBuilder.getGesturesObserver()
@@ -61,6 +61,6 @@ class GesturePanelFragment : Fragment() {
     companion object {
         @JvmStatic
         fun newInstance() =
-            GesturePanelFragment()
+            GestureDrawerFragment()
     }
 }
