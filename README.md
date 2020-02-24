@@ -9,3 +9,4 @@ This project is a self-experiment. I wanted to know if launching apps using shor
 
 # Do you need this?
 Probably not. If you use Android and feel adventurous, please, go ahead. I would also be very interested in feedback! Feel free to open an issue or pull request to voice your opinion!
+To use it, one pre-defined gesture is very useful: Double tap, then draw a straight vertical line upwards (starting from where you double tapped). This will lead you to an activity to manage your saved gestures.
