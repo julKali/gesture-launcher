@@ -6,22 +6,20 @@ import java.io.File
 
 class FileWriter {
 
-    fun write(gesture: Gesture, path: String) {
-        val content = gesture.pointers.map { (id, coords) ->
+    fun write(gesture: Gesture, path: String, name: String? = null) {
+        val content = gesture.pointers.joinToString(separator = "\n\n") { (id, coords) ->
             val coordString = coords.joinToString(separator = "\n") {
                 "${it.x},${it.y}"
             }
-            id to coordString
+            "#$id\n$coordString"
         }
-        val timestamp = System.currentTimeMillis().toString();
-        for ((pId, data) in content) {
-            val file = File("${path}/${timestamp}.$pId.txt")
-            if (file.exists()) {
-                throw Exception("not gonna overwrite that.")
-            }
-            file.createNewFile()
-            file.writeText(data)
-            Log.d("FileWriter", "Wrote to ${file.absolutePath}")
+        val filename = name ?: System.currentTimeMillis().toString();
+        val file = File("${path}/$filename.txt")
+        if (file.exists()) {
+            throw Exception("not gonna overwrite that: ${file.name}")
         }
+        file.createNewFile()
+        file.writeText(content)
+        Log.d("FileWriter", "Wrote to ${file.absolutePath}")
     }
 }
