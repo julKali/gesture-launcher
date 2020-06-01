@@ -25,36 +25,36 @@ class GestureBuilder {
     fun processMotionEvents(motionEvents: Flowable<MotionEvent>) {
         motionEvents
             .forEach { ev ->
-                val pointerCount = ev.pointerCount
-                // todo: use ev.getActionMasked(), see https://developer.android.com/training/gestures/multi
-                when (ev.action) {
+                val pointerIndex = ev.actionIndex
+                val pointerId = ev.getPointerId(pointerIndex)
+                val actionMasked = ev.actionMasked
+                when (actionMasked) {
+                    MotionEvent.ACTION_POINTER_DOWN,
                     MotionEvent.ACTION_DOWN -> {
                         timerTask?.cancel()
-                        for (p in 0 until pointerCount) {
-                            val pId = ev.getPointerId(p)
-                            val externalId = getNextPointerId()
-                            internalToExternalPointerIds[pId] = externalId
-                            addToGesture(externalId, ev.getX(p).toDouble(), ev.getY(p).toDouble())
-                        }
+                        val externalId = getNextPointerId()
+                        internalToExternalPointerIds[pointerId] = externalId
+                        addToGesture(externalId, ev.getX(pointerIndex).toDouble(), ev.getY(pointerIndex).toDouble())
                     }
+                    MotionEvent.ACTION_POINTER_UP,
                     MotionEvent.ACTION_UP -> {
-                        for (p in 0 until pointerCount) {
-                            val pId = ev.getPointerId(p)
-                            val externalId = internalToExternalPointerIds[pId]
-                                ?: throw Exception("Pointer ID $pId not found")
-                            addToGesture(externalId, ev.getX(p).toDouble(), ev.getY(p).toDouble())
-                            internalToExternalPointerIds.remove(pId)
-                        }
-                        timerTask = object : TimerTask() {
-                            override fun run() {
-                                val gesture = Gesture.fromPointerMap(currentGesture)
-                                gesturesBuilt.onNext(gesture)
-                                clear()
+                        val externalId = internalToExternalPointerIds[pointerId]
+                            ?: throw Exception("Pointer ID $pointerId not found")
+                        addToGesture(externalId, ev.getX(pointerIndex).toDouble(), ev.getY(pointerIndex).toDouble())
+                        internalToExternalPointerIds.remove(pointerId)
+                        if (actionMasked == MotionEvent.ACTION_UP) {
+                            timerTask = object : TimerTask() {
+                                override fun run() {
+                                    val gesture = Gesture.fromPointerMap(currentGesture)
+                                    gesturesBuilt.onNext(gesture)
+                                    clear()
+                                }
                             }
+                            timer.schedule(timerTask, WAIT_FOR_NEXT_DOWN_MILLISECONDS)
                         }
-                        timer.schedule(timerTask, WAIT_FOR_NEXT_DOWN_MILLISECONDS)
                     }
                     MotionEvent.ACTION_MOVE -> {
+                        val pointerCount = ev.pointerCount
                         val historySize = ev.historySize;
                         for (h in 0 until historySize) {
                             for (p in 0 until pointerCount) {
@@ -88,11 +88,10 @@ class GestureBuilder {
     }
 
     private fun addToGesture(pointerId: Int, xCoord: Double, yCoord: Double) {
-        val coord =
-            Coordinate(xCoord, yCoord)
+        val coord = Coordinate(xCoord, yCoord)
         val pointerCoords = currentGesture.getOrPut(pointerId) { mutableListOf() }
         val last = pointerCoords.lastOrNull()
-        if (last != null && last == coord) return
+        if (last == coord) return
         pointerCoords.add(coord)
     }
 
