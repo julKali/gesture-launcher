@@ -3,7 +3,8 @@ package com.julkali.glauncher.processing.score
 import android.util.Log
 import com.julkali.glauncher.processing.data.Gesture
 import com.julkali.glauncher.processing.data.Pointer
-import kotlin.math.abs
+import kotlin.math.sqrt
+import kotlin.math.pow
 
 class GestureScoreCalculator {
 
@@ -34,10 +35,10 @@ class GestureScoreCalculator {
         val total = subjCoords
             .zip(otherCoords)
             .map { (subj, other) ->
-                abs(other.x - subj.x) + abs(other.y - subj.y)
+                (other.x - subj.x).pow(2.0) + (other.y - subj.y).pow(2.0)
             }
             .sum()
-        val averageDifference = total / size
+        val averageDifference = sqrt(total / size)
         return 1.0 - averageDifference
     }
 
