@@ -14,44 +14,51 @@ class GestureCompressor(private val compressedSize: Int) {
             .map {
                 val isPoint = it.coords.size == 1
                 if (isPoint) return@map it
-                val vectors = it.toPositionedVectors()
-                val totalLength = vectors.map { it.vector.length }.sum()
-                val pieceLength = totalLength / compressedSize
-                val coords = (0 until compressedSize).map { i ->
-                    val offset = pieceLength * i
-                    findCoordinateAtOffset(vectors, offset)
-                }
+                val coords = calculateCompressedCoordinates(it)
                 Pointer(it.id, coords)
             }
         return Gesture(pointers)
     }
 
-    private fun findCoordinateAtOffset(vectors: List<PositionedVector>, offset: Double): Coordinate {
-        var remaining = offset
-        for (vector in vectors) {
-            val length = vector.vector.length
-            if (length < remaining) {
-                remaining -= length
-                continue
+    private fun calculateCompressedCoordinates(pointer: Pointer): List<Coordinate> {
+        val (vectors, totalLength) = pointer.toPositionedVectors()
+        val pieceLength = totalLength / compressedSize
+        val compressedCoords = mutableListOf<Coordinate>()
+        var currentVecIndex = 0
+        var firstRemainingVecOffset = 0.0
+        for (i in 0 until compressedSize) {
+            var remaining = pieceLength
+            var nextVec = vectors[currentVecIndex]
+            var nextVecRemainingLength = nextVec.vector.length - firstRemainingVecOffset
+            firstRemainingVecOffset += remaining
+            while (nextVecRemainingLength < remaining && currentVecIndex != vectors.lastIndex) {
+                remaining -= nextVecRemainingLength
+                currentVecIndex++
+                nextVec = vectors[currentVecIndex]
+                nextVecRemainingLength = nextVec.vector.length
+                firstRemainingVecOffset = remaining
             }
-            return vector.start.addVectorWithLength(vector.vector, remaining)
+            val nextCompressedCoord = nextVec.start.addVectorWithLength(nextVec.vector, remaining)
+            compressedCoords.add(nextCompressedCoord)
         }
-        Log.e(TAG, vectors.joinToString { "${it.start} - ${it.vector}" })
-        throw Exception("Can't find coordinate for $offset, remaining: $remaining")
+        return compressedCoords
     }
 
-    private fun Pointer.toPositionedVectors(): List<PositionedVector> {
-        return coords.windowed(2)
+    private fun Pointer.toPositionedVectors(): Pair<List<PositionedVector>, Double> {
+        var length = 0.0
+        val vecs = coords.windowed(2)
             .map {
-                (last, curr) ->
+                    (last, curr) ->
                 val x = curr.x - last.x
                 val y = curr.y - last.y
                 val vec = Vector(x, y)
+                length += vec.length
                 PositionedVector(
                     last,
                     vec
                 )
             }
+        return Pair(vecs, length)
     }
 
     private fun Coordinate.addVectorWithLength(vector: Vector, length: Double): Coordinate {

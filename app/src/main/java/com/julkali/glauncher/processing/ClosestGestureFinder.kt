@@ -24,12 +24,11 @@ class ClosestGestureFinder(
     )
 
     fun closestGesture(gesture: Gesture): AppLaunchEntry? {
-
         val gestures = dbHandler.readSavedGestures()
         val scores = mutableMapOf<AppLaunchEntry, Double>()
+        val gestureCompressed = compressor.compress(gesture)
         for (toCompareDoc in gestures) {
             val toCompare = toCompareDoc.gesture
-            val gestureCompressed = compressor.compress(gesture)
             val toCompareCompressed = compressor.compress(toCompare)
             val score = gestureScoreCalculator.calculate(gestureCompressed, toCompareCompressed)
             scores[toCompareDoc] = score
