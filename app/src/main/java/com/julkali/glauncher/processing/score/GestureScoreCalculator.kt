@@ -1,12 +1,16 @@
 package com.julkali.glauncher.processing.score
 
 import android.util.Log
+import com.julkali.glauncher.processing.data.Coordinate
 import com.julkali.glauncher.processing.data.Gesture
 import com.julkali.glauncher.processing.data.Pointer
+import java.util.*
 import kotlin.math.sqrt
 import kotlin.math.pow
 
 class GestureScoreCalculator {
+
+    data class CellValue(val value: Double, val stepCount: Int = 1)
 
     private val TAG = "GestureScoreCalculator"
 
@@ -26,23 +30,43 @@ class GestureScoreCalculator {
     private fun calculatePointerScore(subject: Pointer, toCompare: Pointer): Double {
         val subjCoords = subject.coords
         val otherCoords = toCompare.coords
-        val size = subjCoords.size
-        if (size != otherCoords.size) {
-            if (subject.isPoint() || toCompare.isPoint()) return -1.0
-            Log.e(TAG, "subjCoords.size = ${subjCoords.size}, otherCoords.size = ${otherCoords.size}")
-            throw Exception("Coords are not of same length")
+        if (subject.isPoint() && toCompare.isPoint()) {
+            return 1.0 - (subjCoords.single() dist otherCoords.single())
         }
-        val total = subjCoords
-            .zip(otherCoords)
-            .map { (subj, other) ->
-                (other.x - subj.x).pow(2.0) + (other.y - subj.y).pow(2.0)
+        if (subject.isPoint() != toCompare.isPoint()) {
+            return -1.0
+        }
+        val n = subjCoords.size
+        val m = otherCoords.size
+        val costs = ArrayDeque<CellValue>(m)
+        costs.addLast(CellValue(subjCoords[0] dist otherCoords[0]))
+        for (j in 1 until m) {
+            costs.addLast(CellValue(subjCoords[0] dist otherCoords[j]) + costs.last)
+        }
+        for (i in 1 until n) {
+            costs.addLast(CellValue((subjCoords[i] dist otherCoords[0])) + costs.first)
+            for (j in 1 until m) {
+                val dist = subjCoords[i] dist otherCoords[j]
+                val cellVal = CellValue(dist) + listOf(
+                    costs.removeFirst(),
+                    costs.first(),
+                    costs.last()
+                ).minBy { it.value }!!
+                costs.addLast(cellVal)
             }
-            .sum()
-        val averageDifference = sqrt(total / size)
-        return 1.0 - averageDifference
+            costs.removeFirst()
+        }
+        val lastCell = costs.last
+        return 1.0 - sqrt(lastCell.value / lastCell.stepCount)
     }
 
     private fun Pointer.isPoint(): Boolean {
         return coords.size == 1
     }
+
+    private infix fun Coordinate.dist(other: Coordinate)
+            = sqrt((other.x - x).pow(2) + (other.y - y).pow(2))
+
+    private operator fun CellValue.plus(other: CellValue)
+            = CellValue(value + other.value, stepCount + other.stepCount)
 }
