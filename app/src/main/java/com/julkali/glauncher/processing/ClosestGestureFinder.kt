@@ -65,7 +65,7 @@ class ClosestGestureFinder(
             val takeCount = ceil(candidateDists.size.toDouble() / 2).toInt()
             val betterHalf = candidateDists.sortedByDescending { it.dist }.take(takeCount)
             if (coarseLevel == maxCoarseLevel - 1) {
-                val first = betterHalf.first()
+                val first = betterHalf.firstOrNull() ?: continue
                 best = if (first.dist >= MIN_SCORE_THRESHOLD) first.cand else null
             }
             candidates = betterHalf.map { Pair(it.cand, it.coords) }
