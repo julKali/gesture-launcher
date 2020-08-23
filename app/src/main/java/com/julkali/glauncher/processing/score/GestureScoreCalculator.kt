@@ -4,6 +4,7 @@ import android.util.Log
 import com.julkali.glauncher.processing.data.Coordinate
 import com.julkali.glauncher.processing.data.Gesture
 import com.julkali.glauncher.processing.data.Pointer
+import com.julkali.glauncher.processing.dist
 import java.util.*
 import kotlin.math.sqrt
 import kotlin.math.pow
@@ -16,9 +17,8 @@ class GestureScoreCalculator {
 
     fun calculate(subject: Gesture, toCompare: Gesture): Double {
         if (subject.pointers.size != toCompare.pointers.size) {
-            return -1.0 // todo: create score for each compbination of pointer lists for bigger one
+            return -1.0
         }
-        // todo: have to compare every combination of pointers, because they might not have same indices
         val pointerScores = subject.pointers
             .zip(toCompare.pointers)
             .map { (subj, other) ->
@@ -30,23 +30,27 @@ class GestureScoreCalculator {
     private fun calculatePointerScore(subject: Pointer, toCompare: Pointer): Double {
         val subjCoords = subject.coords
         val otherCoords = toCompare.coords
-        if (subject.isPoint() && toCompare.isPoint()) {
-            return 1.0 - (subjCoords.single() dist otherCoords.single())
+        return calculateCoordListScore(subjCoords, otherCoords)
+    }
+
+    fun calculateCoordListScore(p: List<Coordinate>, q: List<Coordinate>): Double {
+        val n = p.size
+        val m = q.size
+        if (n == 1 && m == 1) {
+            return 1.0 - (p.single() dist q.single())
         }
-        if (subject.isPoint() != toCompare.isPoint()) {
+        if ((n == 1) != (m == 1)) {
             return -1.0
         }
-        val n = subjCoords.size
-        val m = otherCoords.size
         val costs = ArrayDeque<CellValue>(m)
-        costs.addLast(CellValue(subjCoords[0] dist otherCoords[0]))
+        costs.addLast(CellValue(p[0] dist q[0]))
         for (j in 1 until m) {
-            costs.addLast(CellValue(subjCoords[0] dist otherCoords[j]) + costs.last)
+            costs.addLast(CellValue(p[0] dist q[j]) + costs.last)
         }
         for (i in 1 until n) {
-            costs.addLast(CellValue((subjCoords[i] dist otherCoords[0])) + costs.first)
+            costs.addLast(CellValue((p[i] dist q[0])) + costs.first)
             for (j in 1 until m) {
-                val dist = subjCoords[i] dist otherCoords[j]
+                val dist = p[i] dist q[j]
                 val cellVal = CellValue(dist) + listOf(
                     costs.removeFirst(),
                     costs.first(),
@@ -63,9 +67,6 @@ class GestureScoreCalculator {
     private fun Pointer.isPoint(): Boolean {
         return coords.size == 1
     }
-
-    private infix fun Coordinate.dist(other: Coordinate)
-            = sqrt((other.x - x).pow(2) + (other.y - y).pow(2))
 
     private operator fun CellValue.plus(other: CellValue)
             = CellValue(value + other.value, stepCount + other.stepCount)
